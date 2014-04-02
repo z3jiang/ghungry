@@ -21,8 +21,6 @@ ADMINS = (
 )
 MANAGERS = ADMINS
 
-# databases will be disabled below for now
-
 if ON_OPENSHIFT:
     # os.environ['OPENSHIFT_MYSQL_DB_*'] variables can be used with databases created
     # with rhc cartridge add (see /README in this git repo)
@@ -47,9 +45,6 @@ else:
             'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
         }
     }
-
-# disable databases for now
-DATABASES = {}
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
