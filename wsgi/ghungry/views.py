@@ -16,7 +16,6 @@ def _soupfy(url):
   return BeautifulSoup(response)
 
 def list_cafes(request):
-  import pdb; pdb.set_trace()
   response = []
   for key, url in CAFES.items():
     response.append({key: Cafe(_soupfy(url))})
