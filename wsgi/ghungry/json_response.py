@@ -1,21 +1,69 @@
 
 import json
 from django.http import HttpResponse
-from cafe import *
+from models import *
+from django.core.serializers.json import DjangoJSONEncoder
 
-class CafeEncoder(json.JSONEncoder):
-  def default(self, obj):
-    if isinstance(obj, Cafe):
-      return {'items': obj.items}
-    elif isinstance(obj, MenuItem):
-      return {'name': obj.name, 'ingredients': obj.ingredients}
-    elif isinstance(obj, Ingredient):
-      return {'name': obj.name}
-    else:
-      # Let the base class default method raise the TypeError
-      return json.JSONEncoder.default(self, obj)
 
-def JSONResponse(obj):
-  return HttpResponse(json.dumps(obj, cls=CafeEncoder, indent=2),
+def JSONResponse(obj, recursive=False):
+  if recursive:
+    obj = model_to_dict(obj[0])
+  else:
+    obj = [list(item.values())[0] for item in obj]
+
+  return HttpResponse(json.dumps(obj, indent=2, cls=DjangoJSONEncoder),
                       content_type="application/json")
 
+from django.core.exceptions import ObjectDoesNotExist
+
+# from https://djangosnippets.org/snippets/2342/
+
+from django.core.exceptions import ObjectDoesNotExist
+def model_to_dict(obj, exclude=['AutoField', 'ForeignKey', \
+    'OneToOneField']):
+    '''
+        serialize model object to dict with related objects
+
+        author: Vadym Zakovinko <vp@zakovinko.com>
+        date: January 31, 2011
+        http://djangosnippets.org/snippets/2342/
+    '''
+    tree = {}
+    for field_name in obj._meta.get_all_field_names():
+        try:
+            field = getattr(obj, field_name)
+        except (ObjectDoesNotExist, AttributeError):
+            continue
+
+        if field.__class__.__name__ in ['RelatedManager', 'ManyRelatedManager']:
+            if field.model.__name__ in exclude:
+                continue
+
+            if field.__class__.__name__ == 'ManyRelatedManager':
+                exclude.append(obj.__class__.__name__)
+            subtree = []
+            for related_obj in getattr(obj, field_name).all():
+                value = model_to_dict(related_obj, \
+                    exclude=exclude)
+                if value:
+                    subtree.append(value)
+            if subtree:
+                tree[field_name] = subtree
+
+            continue
+
+        field = obj._meta.get_field_by_name(field_name)[0]
+        if field.__class__.__name__ in exclude:
+            continue
+
+        if field.__class__.__name__ == 'RelatedObject':
+            exclude.append(field.model.__name__)
+            tree[field_name] = model_to_dict(getattr(obj, field_name), \
+                exclude=exclude)
+            continue
+
+        value = getattr(obj, field_name)
+        if value:
+            tree[field_name] = value
+
+    return tree

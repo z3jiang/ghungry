@@ -5,6 +5,6 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-    url(r'^cafes', 'ghungry.views.list_cafes'),
-    url(r'^menu/(.*)', 'ghungry.views.get_menu_by_cafe'),
+    url(r'^cafe/(.*)', 'ghungry.views.get_cafe'),
+    url(r'^cafes', 'ghungry.views.get_cafes'),
 )

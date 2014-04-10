@@ -147,6 +147,7 @@ TEMPLATE_DIRS = (
 
 INSTALLED_APPS = (
     #'django.contrib.auth',
+    'ghungry',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
@@ -157,6 +158,17 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
 )
+
+# Support earlier version of django.
+try:
+  import django.utils.log.RequireDebugFalse
+except:
+  import logging
+  import django.utils.log
+  class RequireDebugFalse(logging.Filter):
+    def filter(self, record):
+      return not DEBUG
+  django.utils.log.RequireDebugFalse = RequireDebugFalse
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
@@ -169,14 +181,24 @@ LOGGING = {
     'filters': {
         'require_debug_false': {
             '()': 'django.utils.log.RequireDebugFalse'
-        }
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': '%(levelname)s %(asctime)s %(module)s %(message)s'
+        },
     },
     'handlers': {
         'mail_admins': {
             'level': 'ERROR',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
-        }
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple'
+        },
     },
     'loggers': {
         'django.request': {
@@ -184,5 +206,10 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-    }
+        'ghungry': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
 }
